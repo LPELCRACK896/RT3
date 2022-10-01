@@ -1,3 +1,5 @@
+from pickletools import read_unicodestring1
+from turtle import pos
 import lpmath as lpm
 import numpy as np
 from math import pi
@@ -130,7 +132,35 @@ class AABB(object):
                     if planeInter.distance < t:
                         t = planeInter.distance
                         intersect = planeInter
-        
+                        # Tex coords
+                        u, v = 0, 0
+                        # Las uvs de las caras de los lados
+                        ur= None
+                        vr = None
+                        if abs(plane.normal[0]) > 0 :
+                            #Mapear uvs para el eje x, usando coordenads de y y z
+                            u = (planeInter.point[1]-self.boundsMin[1])/ self.size[1]
+                            v = (planeInter.point[2]-self.boundsMin[2])/ self.size[2]
+                        elif abs(plane.normal[1]) > 0 :
+                            u = (planeInter.point[0]-self.boundsMin[1])/ self.size[0]
+                            v = (planeInter.point[2]-self.boundsMin[2])/ self.size[2]
+                        elif abs(plane.normal[2]) > 0 :
+                            u = (planeInter.point[0]-self.boundsMin[0])/ self.size[0]
+                            v = (planeInter.point[1]-self.boundsMin[1])/ self.size[1]
         if not intersect: return None
         
-        return Intersect(distance=t, point=intersect.point, normal = intersect.normal, textCoords=None, sceneObj=self)
+        return Intersect(distance=t, point=intersect.point, normal = intersect.normal, textCoords=(u, v), sceneObj=self)
+
+class Disk(object):
+
+    def __init__(self, position, radius, normal, material) -> None:
+        self.plane = Plane(position, normal, material)
+        self.radius = radius 
+        self.material = material
+    
+    def ray_intersect(self, orig, dir):
+        intersect = self.plane.ray_intersect(orig, dir)
+        if not intersect: return None
+        contact =  lpm.magnitud_vector(lpm.suma_o_resta_vectores(intersect.point, self.plane.position, True))
+        if contact > self.radius: return None 
+        return Intersect(distance=intersect.distance, point=intersect.point, normal=self.plane.normal, textCoords=None, sceneObj=self)

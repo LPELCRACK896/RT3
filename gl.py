@@ -176,7 +176,8 @@ class Raytracer(object):
 
         if material.texture and intersect.textCoords:
             texColor = material.texture.getColor(intersect.textCoords[0], intersect.textCoords[1])
-            finalColor = texColor
+            if not texColor:
+                finalColor = [t*f for t, f in zip(texColor, finalColor)]
 
         r = min(1, finalColor[0])
         g = min(1, finalColor[1])
